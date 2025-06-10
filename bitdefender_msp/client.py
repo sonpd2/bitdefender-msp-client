@@ -126,18 +126,22 @@ class BitdefenderMSPClient:
         """
         return self._request("DELETE", f"/v1/subscribers/{subscriber_id}")
     
-    # Subscription methods
-    def list_subscriptions(self, subscriber_id: str) -> Dict[str, Any]:
-        """List all subscriptions for a subscriber
+    def unmanage_subscriber(self, subscriber_id: str) -> Dict[str, Any]:
+        """Un-manage a subscriber account, transforming it from a managed account to a non-managed Bitdefender account
         
         Args:
             subscriber_id: The ID of the subscriber
             
         Returns:
-            Dictionary containing subscriptions information
+            Dictionary containing the result of the operation
+            
+        Note:
+            This operation is only available for organizations using Bitdefender Login
         """
-        return self._request("GET", f"/v1/subscribers/{subscriber_id}/subscriptions")
+        data = {"unmanage": True}
+        return self._request("PATCH", f"/v1/subscribers/{subscriber_id}", json=data)
     
+    # Subscription methods
     def add_subscription(self, 
                         subscriber_id: str, 
                         product_id: str,
@@ -202,3 +206,60 @@ class BitdefenderMSPClient:
             Dictionary containing the result of the operation
         """
         return self._request("DELETE", f"/v1/subscribers/{subscriber_id}/subscriptions/{subscription_id}")
+    
+    def delete_all_subscriptions(self, subscriber_id: str) -> Dict[str, Any]:
+        """Remove all subscriptions of a subscriber
+        
+        Args:
+            subscriber_id: The ID of the subscriber
+            
+        Returns:
+            Dictionary containing the result of the operation
+        """
+        return self._request("DELETE", f"/v1/subscribers/{subscriber_id}/subscriptions")
+    
+    def suspend_subscription(self, subscriber_id: str, subscription_id: str, suspended: bool = True) -> Dict[str, Any]:
+        """Suspend or resume a specific subscription
+        
+        Args:
+            subscriber_id: The ID of the subscriber
+            subscription_id: The ID of the subscription
+            suspended: True to suspend, False to resume
+            
+        Returns:
+            Dictionary containing the result of the operation
+        """
+        data = {"suspended": suspended}
+        return self._request("PATCH", f"/v1/subscribers/{subscriber_id}/subscriptions/{subscription_id}", json=data)
+    
+    def convert_trial_subscription(self, subscriber_id: str, subscription_id: str, product_id: Optional[str] = None) -> Dict[str, Any]:
+        """Convert a trial subscription to a regular subscription
+        
+        Args:
+            subscriber_id: The ID of the subscriber
+            subscription_id: The ID of the trial subscription
+            product_id: Optional product ID to use for the converted subscription. If not provided, uses the same product ID as the trial.
+            
+        Returns:
+            Dictionary containing the result of the operation
+        """
+        data = {"convert": product_id if product_id else True}
+        return self._request("PATCH", f"/v1/subscribers/{subscriber_id}/subscriptions/{subscription_id}", json=data)
+    
+    def replace_subscription(self, subscriber_id: str, subscription_id: str, product_id: str) -> Dict[str, Any]:
+        """Replace a product subscription with a subscription based on another product
+        
+        Args:
+            subscriber_id: The ID of the subscriber
+            subscription_id: The ID of the subscription to replace
+            product_id: The ID of the new product to use
+            
+        Returns:
+            Dictionary containing the result of the operation
+            
+        Note:
+            This is useful for subscription upgrades/downgrades
+            Replacing a suspended subscription will resume it with the new product ID
+        """
+        data = {"product_id": product_id}
+        return self._request("PUT", f"/v1/subscribers/{subscriber_id}/subscriptions/{subscription_id}", json=data)
