@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="bitdefender-msp-client",
-    version="0.1.0",
+    version="0.1.1",
     author="My Son",
     description="Python client for Bitdefender MSP API",
     long_description=long_description,
